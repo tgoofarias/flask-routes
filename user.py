@@ -1,92 +1,68 @@
 from datetime import datetime
-from event import EVENT
 from flask import abort, make_response
+import json
+
 
 def get_timestamp():
     return datetime.now().strftime(('%Y-%m-%d %H:%M:%S'))
 
-USER = {
-    '1000': {
-        'user_name': 'Tiago Farias Barbosa',
-        'user_email': 'email@gmail.com',
-        'user_id': '1000',
-        'timestamp': get_timestamp()
-    },
-    '2000': {
-        'user_name': 'Tiago Farias Barbosa',
-        'user_email': 'email@gmail.com',
-        'user_id': '2000',
-        'timestamp': get_timestamp()
-    },
-    '3000': {
-        'user_name': 'Tiago Farias Barbosa',
-        'user_email': 'email@gmail.com',
-        'user_id': '3000',
-        'timestamp': get_timestamp()
-    }
-}
-
 
 def read_all():
-    return list(USER.values())
+    from app import mysql
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM agenda_usuario;')
+    rv = cur.fetchall()
+    column_names = [i[0] for i in cur.description]
+    rows = [dict(zip(column_names, row)) for row in rv]
+    return rows
 
 
 def create(user):
-    user_id = user.get('user_id')
-    user_name = user.get('user_name', '')
+    usuario_id = user.get('usuario_id')
+    usuario_nome = user.get('usuario_nome', '')
+    usuario_email = user.get('usuario_email')
+    usuario_senha = user.get('usuario_senha')
+    usuario_status = 1
 
-    if user_id and user_id not in USER:
-        USER[user_id] = {
-            'user_id': user_id,
-            'user_name': user_name,
-            'timestamp': get_timestamp()
-        }
-        return USER[user_id], 201
-    else:
-        abort(
-            406,
-            f'user with last name {user_id} already exists',
-        )
+    from app import mysql
+    cur = mysql.connection.cursor()
+    cur.execute(f"INSERT INTO agenda_usuario(usuario_id, usuario_nome, usuario_email, usuario_senha, usuario_status) VALUES ('{usuario_id}', '{usuario_nome}', '{usuario_email}', '{usuario_senha}', '{usuario_status}')")
+    mysql.connection.commit()
+    cur.close()
 
 
 def read_one(user_id):
-    if user_id in USER:
-        return USER[user_id]
-    else:
-        abort(404, f'User not found')
+    from app import mysql
+    cur = mysql.connection.cursor()
+    cur.execute(f"SELECT * FROM agenda_usuario WHERE usuario_id='{user_id}';")
+    rv = cur.fetchall()
+    column_names = [i[0] for i in cur.description]
+    rows = [dict(zip(column_names, row)) for row in rv]
+    return rows[0]
 
 
 def update(user_id, user):
-    if user_id in USER:
-        USER[user_id]["user_name"] = user.get("user_name", USER[user_id]["user_name"])
-        USER[user_id]["timestamp"] = get_timestamp()
-        return USER[user_id]
-    else:
-        abort(
-            404,
-            f"Person with ID {user_id} not found"
-        )
+    from app import mysql
+    usuario_email = user.get('usuario_email')
+    cur = mysql.connection.cursor()
+    cur.execute(f"UPDATE agenda_usuario SET usuario_email='{usuario_email}' WHERE usuario_id={user_id};")
+    mysql.connection.commit()
+    cur.close()
 
 
 def delete(user_id):
-    if user_id in USER:
-        del USER[user_id]
-        return make_response(
-            f"{user_id} successfully deleted", 200
-        )
-    else:
-        abort(
-            404,
-            f"Person with ID {user_id} not found"
-        )
+    from app import mysql
+    cur = mysql.connection.cursor()
+    cur.execute(f"DELETE FROM agenda_usuario WHERE usuario_id={user_id};")
+    mysql.connection.commit()
+    cur.close()
 
 
 def read_all_events(user_id):
-    if user_id in USER:
-        USER_EVENTS = {}
-        for event_id, event_data in EVENT.items():
-            if event_data["user_id"] == user_id:
-                USER_EVENTS[event_id] = event_data
-        return list(USER_EVENTS.values())
-    else:
-        abort(404, "User not found")
+    from app import mysql
+    cur = mysql.connection.cursor()
+    cur.execute(f"SELECT * FROM agenda_evento WHERE usuario_id='{user_id}';")
+    rv = cur.fetchall()
+    column_names = [i[0] for i in cur.description]
+    rows = [dict(zip(column_names, row)) for row in rv]
+    return rows

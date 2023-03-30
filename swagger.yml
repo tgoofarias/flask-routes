@@ -12,28 +12,34 @@ components:
     User:
       type: "object"
       required:
-        - user_id
+        - usuario_id
       properties:
-        user_name:
+        usuario_id:
           type: "string"
-        user_email:
+        usuario_nome:
           type: "string"
-        user_id:
+        usuario_email:
+          type: "string"
+        usuario_status:
+          type: "string"
+        usuario_senha:
           type: "string"
     Event:
       type: "object"
       required:
-        - event_id
+        - evento_id
       properties:
-        event_title:
+        evento_id:
           type: "string"
-        event_id:
+        evento_data_hora:
           type: "string"
-        event_description:
+        evento_descricao:
           type: "string"
-        event_date:
+        evento_nome:
           type: "string"
-        user_id:
+        evento_status:
+          type: "string"
+        usuario_id:
           type: "string"
   parameters:
     user_id:
